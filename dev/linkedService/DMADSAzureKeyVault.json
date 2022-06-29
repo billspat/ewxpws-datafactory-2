@@ -1,0 +1,10 @@
+{
+	"name": "DMADSAzureKeyVault",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://StandardVault1.vault.azure.net/"
+		}
+	}
+}

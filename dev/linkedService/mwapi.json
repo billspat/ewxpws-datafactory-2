@@ -1,0 +1,21 @@
+{
+	"name": "mwapi",
+	"properties": {
+		"parameters": {
+			"station_type": {
+				"type": "string",
+				"defaultValue": "EXAMPLE"
+			},
+			"station_config": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://fn-ewxpws-dev.azurewebsites.net//api/mwapi",
+			"enableServerCertificateValidation": false,
+			"authenticationType": "Anonymous"
+		}
+	}
+}

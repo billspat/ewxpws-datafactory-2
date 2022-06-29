@@ -1,0 +1,11 @@
+{
+	"name": "AzureBlobStorageEwxDev",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobStorage",
+		"typeProperties": {
+			"serviceEndpoint": "https://ewxpwsdevsa.blob.core.windows.net/",
+			"accountKind": "StorageV2"
+		}
+	}
+}

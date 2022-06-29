@@ -1,0 +1,12 @@
+{
+	"name": "AzurePostgreSqlEWXDev",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzurePostgreSql",
+		"typeProperties": {
+			"connectionString": "host=ewxpws-pgserver-dev.postgres.database.azure.com;port=5432;database=ewxpws-dev;uid=ewadmin@ewxpws-pgserver-dev;encryptionmethod=6;validateservercertificate=0",
+			"encryptedCredential": "ew0KICAiVmVyc2lvbiI6ICIyMDE3LTExLTMwIiwNCiAgIlByb3RlY3Rpb25Nb2RlIjogIktleSIsDQogICJTZWNyZXRDb250ZW50VHlwZSI6ICJQbGFpbnRleHQiLA0KICAiQ3JlZGVudGlhbElkIjogIkRBVEFGQUNUT1JZQDI3NDEzMkE5LUZFMjgtNDM0RS1CMDA4LUNDRjczNUIzRTY5OV84ZjE5OWRjMS02ZWUwLTRhYTUtODY2ZC1jN2QxZDg1N2EyYzciDQp9"
+		}
+	}
+}

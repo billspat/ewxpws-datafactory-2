@@ -1,0 +1,23 @@
+{
+	"name": "example_rawdata_csv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureBlobStorageEwxDev",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "ex_raw_data.csv",
+				"container": "ewx-data"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
