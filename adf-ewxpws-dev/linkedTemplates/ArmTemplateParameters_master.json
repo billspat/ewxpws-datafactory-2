@@ -1,0 +1,33 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-ewxpws-dev"
+		},
+		"AzureFunctionEwxDataCollect_functionKey": {
+			"value": ""
+		},
+		"AzurePostgreSqlEWXDev_connectionString": {
+			"value": ""
+		},
+		"AzureBlobStorageEwxDev_properties_typeProperties_serviceEndpoint": {
+			"value": "https://ewxpwsdevsa.blob.core.windows.net/"
+		},
+		"AzureFunctionEwxDataCollect_properties_typeProperties_functionAppUrl": {
+			"value": "https://fn-ewxpws-dev.azurewebsites.net"
+		},
+		"DMADSAzureKeyVault_properties_typeProperties_baseUrl": {
+			"value": "https://StandardVault1.vault.azure.net/"
+		},
+		"mwapi_properties_typeProperties_url": {
+			"value": "https://fn-ewxpws-dev.azurewebsites.net//api/mwapi"
+		},
+		"containerUri": {
+			"value": ""
+		},
+		"containerSasToken": {
+			"value": ""
+		}
+	}
+}

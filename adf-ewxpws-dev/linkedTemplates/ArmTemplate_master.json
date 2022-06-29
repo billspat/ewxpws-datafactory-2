@@ -1,0 +1,84 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-ewxpws-dev"
+		},
+		"AzureFunctionEwxDataCollect_functionKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'functionKey' of 'AzureFunctionEwxDataCollect'"
+		},
+		"AzurePostgreSqlEWXDev_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzurePostgreSqlEWXDev'"
+		},
+		"AzureBlobStorageEwxDev_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://ewxpwsdevsa.blob.core.windows.net/"
+		},
+		"AzureFunctionEwxDataCollect_properties_typeProperties_functionAppUrl": {
+			"type": "string",
+			"defaultValue": "https://fn-ewxpws-dev.azurewebsites.net"
+		},
+		"DMADSAzureKeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://StandardVault1.vault.azure.net/"
+		},
+		"mwapi_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://fn-ewxpws-dev.azurewebsites.net//api/mwapi"
+		},
+		"containerUri": {
+			"type": "string",
+			"metadata": "URI to storage account containing linked ARM templates"
+		},
+		"containerSasToken": {
+			"type": "string",
+			"metadata": "Sas token to storage account containing linked ARM templates"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "adf-ewxpws-dev_ArmTemplate_0",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2018-02-01",
+			"properties": {
+				"mode": "incremental",
+				"templateLink": {
+					"uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"factoryName": {
+						"value": "[parameters('factoryName')]"
+					},
+					"AzureFunctionEwxDataCollect_functionKey": {
+						"value": "[parameters('AzureFunctionEwxDataCollect_functionKey')]"
+					},
+					"AzurePostgreSqlEWXDev_connectionString": {
+						"value": "[parameters('AzurePostgreSqlEWXDev_connectionString')]"
+					},
+					"AzureBlobStorageEwxDev_properties_typeProperties_serviceEndpoint": {
+						"value": "[parameters('AzureBlobStorageEwxDev_properties_typeProperties_serviceEndpoint')]"
+					},
+					"AzureFunctionEwxDataCollect_properties_typeProperties_functionAppUrl": {
+						"value": "[parameters('AzureFunctionEwxDataCollect_properties_typeProperties_functionAppUrl')]"
+					},
+					"DMADSAzureKeyVault_properties_typeProperties_baseUrl": {
+						"value": "[parameters('DMADSAzureKeyVault_properties_typeProperties_baseUrl')]"
+					},
+					"mwapi_properties_typeProperties_url": {
+						"value": "[parameters('mwapi_properties_typeProperties_url')]"
+					}
+				}
+			},
+			"dependsOn": []
+		}
+	]
+}

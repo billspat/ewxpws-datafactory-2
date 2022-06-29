@@ -1,0 +1,927 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-ewxpws-dev"
+		},
+		"AzureFunctionEwxDataCollect_functionKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'functionKey' of 'AzureFunctionEwxDataCollect'"
+		},
+		"AzurePostgreSqlEWXDev_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzurePostgreSqlEWXDev'"
+		},
+		"AzureBlobStorageEwxDev_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://ewxpwsdevsa.blob.core.windows.net/"
+		},
+		"AzureFunctionEwxDataCollect_properties_typeProperties_functionAppUrl": {
+			"type": "string",
+			"defaultValue": "https://fn-ewxpws-dev.azurewebsites.net"
+		},
+		"DMADSAzureKeyVault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://StandardVault1.vault.azure.net/"
+		},
+		"mwapi_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://fn-ewxpws-dev.azurewebsites.net//api/mwapi"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureBlobStorageEwxDev')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"serviceEndpoint": "[parameters('AzureBlobStorageEwxDev_properties_typeProperties_serviceEndpoint')]",
+					"accountKind": "StorageV2"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureFunctionEwxDataCollect')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "pull data from weather stations using python multiweather api package",
+				"parameters": {
+					"station_type": {
+						"type": "string",
+						"defaultValue": "EXAMPLE"
+					},
+					"station_config": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "AzureFunction",
+				"typeProperties": {
+					"functionAppUrl": "[parameters('AzureFunctionEwxDataCollect_properties_typeProperties_functionAppUrl')]",
+					"functionKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureFunctionEwxDataCollect_functionKey')]"
+					},
+					"authentication": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzurePostgreSqlEWXDev')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzurePostgreSql",
+				"typeProperties": {
+					"connectionString": "[parameters('AzurePostgreSqlEWXDev_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DMADSAzureKeyVault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('DMADSAzureKeyVault_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/mwapi')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"parameters": {
+					"station_type": {
+						"type": "string",
+						"defaultValue": "EXAMPLE"
+					},
+					"station_config": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('mwapi_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": false,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/example_rawdata_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorageEwxDev",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "ex_raw_data.csv",
+						"container": "ewx-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorageEwxDev')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/mwapi_rest_dataset')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "mwapi",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"station_type": {
+							"value": "@dataset().station_type",
+							"type": "Expression"
+						},
+						"station_config": {
+							"value": "@dataset().station_config",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"station_type": {
+						"type": "string",
+						"defaultValue": "EXAMPLE"
+					},
+					"station_config": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/mwapi')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/observations_table')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzurePostgreSqlEWXDev",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzurePostgreSqlTable",
+				"schema": [
+					{
+						"name": "id",
+						"type": "integer",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "station_id",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "station_type",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "atemp",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "dwpt",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "lws0_pwet",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "mstr0",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "nrad",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "pcpn",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "relh",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "rpet",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "smst_05cm",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "soil0",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "srad",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "stmp_05cm",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "wdir",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "wspd",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "wspd_max",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "volt",
+						"type": "double precision",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "request_datetime",
+						"type": "date",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "data_datetime",
+						"type": "date",
+						"precision": 0,
+						"scale": 0
+					}
+				],
+				"typeProperties": {
+					"schema": "public",
+					"table": "observations"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzurePostgreSqlEWXDev')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/reading_output_csv')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorageEwxDev",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"FileName": {
+						"type": "string",
+						"defaultValue": "reading"
+					},
+					"TimeStamp": {
+						"type": "string",
+						"defaultValue": "2022-06-29T07/05/21.5056357Z"
+					},
+					"StationID": {
+						"type": "string",
+						"defaultValue": "STATION_ID"
+					}
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@concat(dataset().FileName,'_',dataset().StationID,'_',dataset().TimeStamp,'.csv')",
+							"type": "Expression"
+						},
+						"folderPath": {
+							"value": "@dataset().StationID",
+							"type": "Expression"
+						},
+						"container": "ewx-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "station_id",
+						"type": "String"
+					},
+					{
+						"name": "request_datetime",
+						"type": "String"
+					},
+					{
+						"name": "pcpn",
+						"type": "String"
+					},
+					{
+						"name": "data_datetime",
+						"type": "String"
+					},
+					{
+						"name": "atemp",
+						"type": "String"
+					},
+					{
+						"name": "relh",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorageEwxDev')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/stations')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzurePostgreSqlEWXDev",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzurePostgreSqlTable",
+				"schema": [
+					{
+						"name": "id",
+						"type": "integer",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "station_id",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "station_type",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					},
+					{
+						"name": "station_config",
+						"type": "text",
+						"precision": 0,
+						"scale": 0
+					}
+				],
+				"typeProperties": {
+					"schema": "public",
+					"table": "stations"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzurePostgreSqlEWXDev')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/runMwapiFunction')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "get_station_list",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "set_timestamp_var",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "AzurePostgreSqlSource",
+								"partitionOption": "None"
+							},
+							"dataset": {
+								"referenceName": "stations",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "mwapi_each_station",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "get_station_list",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('get_station_list').output.value",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "get_reading_to_blob",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [
+										{
+											"name": "Destination",
+											"value": "ewx-data/@{item().station_id}/@{concat('reading','_',item().station_id,'_',variables('timestamp_var'),'.csv')}"
+										}
+									],
+									"typeProperties": {
+										"source": {
+											"type": "RestSource",
+											"httpRequestTimeout": "00:01:40",
+											"requestInterval": "00.00:00:00.010",
+											"requestMethod": "POST",
+											"requestBody": {
+												"value": "@concat('{\"station_type\":\"',\n  item().station_type, \n  '\",\"station_config\":',\n  item().station_config,\n  '}'\n)",
+												"type": "Expression"
+											},
+											"paginationRules": {
+												"supportRFC5988": "true"
+											}
+										},
+										"sink": {
+											"type": "DelimitedTextSink",
+											"storeSettings": {
+												"type": "AzureBlobStorageWriteSettings",
+												"copyBehavior": "FlattenHierarchy"
+											},
+											"formatSettings": {
+												"type": "DelimitedTextWriteSettings",
+												"quoteAllText": true,
+												"fileExtension": ".txt"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"mappings": [
+												{
+													"source": {
+														"path": "$['station_id']"
+													},
+													"sink": {
+														"name": "station_id",
+														"type": "String"
+													}
+												},
+												{
+													"source": {
+														"path": "$['request_datetime']"
+													},
+													"sink": {
+														"name": "request_datetime",
+														"type": "DateTime"
+													}
+												},
+												{
+													"source": {
+														"path": "$['pcpn']"
+													},
+													"sink": {
+														"name": "pcpn",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"path": "$['data_datetime']"
+													},
+													"sink": {
+														"name": "data_datetime",
+														"type": "DateTime"
+													}
+												},
+												{
+													"source": {
+														"path": "$['atemp']"
+													},
+													"sink": {
+														"name": "atemp",
+														"type": "Double"
+													}
+												},
+												{
+													"source": {
+														"path": "$['relh']"
+													},
+													"sink": {
+														"name": "relh",
+														"type": "Double"
+													}
+												}
+											]
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "mwapi_rest_dataset",
+											"type": "DatasetReference",
+											"parameters": {
+												"station_type": "@item().station_type",
+												"station_config": {
+													"value": "@item().station_config",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "reading_output_csv",
+											"type": "DatasetReference",
+											"parameters": {
+												"FileName": "reading",
+												"TimeStamp": {
+													"value": "@variables('timestamp_var')",
+													"type": "Expression"
+												},
+												"StationID": {
+													"value": "@item().station_id",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								},
+								{
+									"name": "import_reading_csv_to_db",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "get_reading_to_blob",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"additionalColumns": [
+												{
+													"name": "station_type",
+													"value": {
+														"value": "@item().station_type",
+														"type": "Expression"
+													}
+												}
+											],
+											"storeSettings": {
+												"type": "AzureBlobStorageReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "AzurePostgreSQLSink",
+											"writeBatchSize": 1000000,
+											"writeBatchTimeout": "00:30:00",
+											"writeMethod": "CopyCommand"
+										},
+										"enableStaging": false,
+										"logSettings": {
+											"enableCopyActivityLog": true,
+											"copyActivityLogSettings": {
+												"logLevel": "Info",
+												"enableReliableLogging": false
+											},
+											"logLocationSettings": {
+												"linkedServiceName": {
+													"referenceName": "AzureBlobStorageEwxDev",
+													"type": "LinkedServiceReference"
+												},
+												"path": "ewx-data"
+											}
+										},
+										"translator": {
+											"type": "TabularTranslator",
+											"mappings": [
+												{
+													"source": {
+														"name": "station_id",
+														"type": "String",
+														"physicalType": "String"
+													},
+													"sink": {
+														"name": "station_id",
+														"type": "String",
+														"physicalType": "text"
+													}
+												},
+												{
+													"source": {
+														"name": "station_type",
+														"type": "String"
+													},
+													"sink": {
+														"name": "station_type",
+														"type": "String",
+														"physicalType": "text"
+													}
+												},
+												{
+													"source": {
+														"name": "atemp",
+														"type": "String",
+														"physicalType": "String"
+													},
+													"sink": {
+														"name": "atemp",
+														"type": "Double",
+														"physicalType": "double precision"
+													}
+												},
+												{
+													"source": {
+														"name": "pcpn",
+														"type": "String",
+														"physicalType": "String"
+													},
+													"sink": {
+														"name": "pcpn",
+														"type": "Double",
+														"physicalType": "double precision"
+													}
+												},
+												{
+													"source": {
+														"name": "relh",
+														"type": "String",
+														"physicalType": "String"
+													},
+													"sink": {
+														"name": "relh",
+														"type": "Double",
+														"physicalType": "double precision"
+													}
+												},
+												{
+													"source": {
+														"name": "request_datetime",
+														"type": "String",
+														"physicalType": "String"
+													},
+													"sink": {
+														"name": "request_datetime",
+														"type": "DateTime",
+														"physicalType": "date"
+													}
+												},
+												{
+													"source": {
+														"name": "data_datetime",
+														"type": "String",
+														"physicalType": "String"
+													},
+													"sink": {
+														"name": "data_datetime",
+														"type": "DateTime",
+														"physicalType": "date"
+													}
+												}
+											],
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "reading_output_csv",
+											"type": "DatasetReference",
+											"parameters": {
+												"FileName": "reading",
+												"TimeStamp": {
+													"value": "@variables('timestamp_var')",
+													"type": "Expression"
+												},
+												"StationID": {
+													"value": "@item().station_id",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "observations_table",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "set_timestamp_var",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "timestamp_var",
+							"value": {
+								"value": "@utcNow()",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"concurrency": 5,
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"mwapioutput": {
+						"type": "String"
+					},
+					"stations_station_type": {
+						"type": "String"
+					},
+					"stations_station_config": {
+						"type": "String"
+					},
+					"mwapi_rest_body": {
+						"type": "String"
+					},
+					"readings": {
+						"type": "String"
+					},
+					"some_data": {
+						"type": "Array"
+					},
+					"reading_filename": {
+						"type": "String"
+					},
+					"timestamp_var": {
+						"type": "String",
+						"defaultValue": "@utcNow()"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/stations')]",
+				"[concat(variables('factoryId'), '/datasets/mwapi_rest_dataset')]",
+				"[concat(variables('factoryId'), '/datasets/reading_output_csv')]",
+				"[concat(variables('factoryId'), '/datasets/observations_table')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureBlobStorageEwxDev')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/mwapi_scheduled_trigger')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "15 minute interval, 10 minutes past the 15 minute mark.  ",
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "runMwapiFunction",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Minute",
+						"interval": 15,
+						"startTime": "2022-06-29T18:25:00Z",
+						"endTime": "2022-07-01T23:55:00Z",
+						"timeZone": "UTC"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/runMwapiFunction')]"
+			]
+		}
+	]
+}
