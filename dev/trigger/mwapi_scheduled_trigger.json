@@ -3,7 +3,7 @@
 	"properties": {
 		"description": "15 minute interval, 10 minutes past the 15 minute mark.  ",
 		"annotations": [],
-		"runtimeState": "Stopped",
+		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
