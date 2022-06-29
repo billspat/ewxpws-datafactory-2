@@ -160,7 +160,11 @@
 									"referenceName": "mwapi_rest_dataset",
 									"type": "DatasetReference",
 									"parameters": {
-										"station_type": "EXAMPLE"
+										"station_type": "@item().station_type",
+										"station_config": {
+											"value": "@item().station_config",
+											"type": "Expression"
+										}
 									}
 								}
 							],
