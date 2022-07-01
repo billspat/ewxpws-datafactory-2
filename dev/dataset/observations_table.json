@@ -124,13 +124,13 @@
 			},
 			{
 				"name": "request_datetime",
-				"type": "date",
+				"type": "timestamp with time zone",
 				"precision": 0,
 				"scale": 0
 			},
 			{
 				"name": "data_datetime",
-				"type": "date",
+				"type": "timestamp with time zone",
 				"precision": 0,
 				"scale": 0
 			}
