@@ -318,7 +318,7 @@
 											"sink": {
 												"name": "request_datetime",
 												"type": "DateTime",
-												"physicalType": "date"
+												"physicalType": "timestamp with time zone"
 											}
 										},
 										{
@@ -330,7 +330,7 @@
 											"sink": {
 												"name": "data_datetime",
 												"type": "DateTime",
-												"physicalType": "date"
+												"physicalType": "timestamp with time zone"
 											}
 										}
 									],
