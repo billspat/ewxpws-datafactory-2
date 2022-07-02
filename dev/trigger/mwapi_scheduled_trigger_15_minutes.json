@@ -1,0 +1,31 @@
+{
+	"name": "mwapi_scheduled_trigger_15_minutes",
+	"properties": {
+		"description": "test 15 minute interval, 10 minutes past the 15 minute mark to allow Zentra to catchup.   ",
+		"annotations": [
+			"test_session"
+		],
+		"runtimeState": "Started",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "runMwapiFunction",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"dc_test_session_id": "2022July02-15minute-test"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Minute",
+				"interval": 15,
+				"startTime": "2022-07-02T13:10:00Z",
+				"endTime": "2022-07-07T00:55:00Z",
+				"timeZone": "UTC"
+			}
+		}
+	}
+}
