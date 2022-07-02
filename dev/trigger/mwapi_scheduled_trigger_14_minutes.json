@@ -5,12 +5,15 @@
 		"annotations": [
 			"test_session"
 		],
-		"runtimeState": "Stopped",
+		"runtimeState": "Started",
 		"pipelines": [
 			{
 				"pipelineReference": {
 					"referenceName": "runMwapiFunction",
 					"type": "PipelineReference"
+				},
+				"parameters": {
+					"dc_test_session_id": "2022July02-14minute-test"
 				}
 			}
 		],

@@ -383,6 +383,12 @@
 			}
 		],
 		"concurrency": 5,
+		"parameters": {
+			"dc_test_session_id": {
+				"type": "string",
+				"defaultValue": "a_random_id"
+			}
+		},
 		"variables": {
 			"mwapioutput": {
 				"type": "String"
