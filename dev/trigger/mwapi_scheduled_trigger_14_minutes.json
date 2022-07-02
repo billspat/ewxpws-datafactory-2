@@ -6,14 +6,21 @@
 			"test_session"
 		],
 		"runtimeState": "Stopped",
-		"pipelines": [],
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "runMwapiFunction",
+					"type": "PipelineReference"
+				}
+			}
+		],
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
 				"frequency": "Minute",
 				"interval": 14,
-				"startTime": "2022-06-29T18:25:00Z",
-				"endTime": "2022-07-08T00:55:00Z",
+				"startTime": "2022-07-02T13:10:00Z",
+				"endTime": "2022-07-07T00:55:00Z",
 				"timeZone": "UTC"
 			}
 		}
