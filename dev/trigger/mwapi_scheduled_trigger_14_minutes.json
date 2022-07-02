@@ -3,7 +3,7 @@
 	"properties": {
 		"description": "test 14 minute interval, 10 minutes past the 15 minute mark to allow Zentra to catchup.   ",
 		"annotations": [
-			"test_session_14_mins"
+			"test_session"
 		],
 		"runtimeState": "Started",
 		"pipelines": [],
