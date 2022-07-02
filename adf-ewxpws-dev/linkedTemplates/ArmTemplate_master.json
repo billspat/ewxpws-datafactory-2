@@ -31,6 +31,10 @@
 			"type": "string",
 			"defaultValue": "https://fn-ewxpws-dev.azurewebsites.net//api/mwapi"
 		},
+		"mwapi_scheduled_trigger_15_minutes_properties_runMwapiFunction_parameters_dc_test_session_id": {
+			"type": "string",
+			"defaultValue": "2022July02-15minute-test"
+		},
 		"containerUri": {
 			"type": "string",
 			"metadata": "URI to storage account containing linked ARM templates"
@@ -75,6 +79,9 @@
 					},
 					"mwapi_properties_typeProperties_url": {
 						"value": "[parameters('mwapi_properties_typeProperties_url')]"
+					},
+					"mwapi_scheduled_trigger_15_minutes_properties_runMwapiFunction_parameters_dc_test_session_id": {
+						"value": "[parameters('mwapi_scheduled_trigger_15_minutes_properties_runMwapiFunction_parameters_dc_test_session_id')]"
 					}
 				}
 			},

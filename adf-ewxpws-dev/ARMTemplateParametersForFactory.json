@@ -22,6 +22,9 @@
 		},
 		"mwapi_properties_typeProperties_url": {
 			"value": "https://fn-ewxpws-dev.azurewebsites.net//api/mwapi"
+		},
+		"mwapi_scheduled_trigger_15_minutes_properties_runMwapiFunction_parameters_dc_test_session_id": {
+			"value": "2022July02-15minute-test"
 		}
 	}
 }

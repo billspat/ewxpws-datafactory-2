@@ -30,6 +30,10 @@
 		"mwapi_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://fn-ewxpws-dev.azurewebsites.net//api/mwapi"
+		},
+		"mwapi_scheduled_trigger_15_minutes_properties_runMwapiFunction_parameters_dc_test_session_id": {
+			"type": "string",
+			"defaultValue": "2022July02-15minute-test"
 		}
 	},
 	"variables": {
@@ -321,13 +325,13 @@
 					},
 					{
 						"name": "request_datetime",
-						"type": "date",
+						"type": "timestamp with time zone",
 						"precision": 0,
 						"scale": 0
 					},
 					{
 						"name": "data_datetime",
-						"type": "date",
+						"type": "timestamp with time zone",
 						"precision": 0,
 						"scale": 0
 					}
@@ -784,7 +788,7 @@
 													"sink": {
 														"name": "request_datetime",
 														"type": "DateTime",
-														"physicalType": "date"
+														"physicalType": "timestamp with time zone"
 													}
 												},
 												{
@@ -796,7 +800,7 @@
 													"sink": {
 														"name": "data_datetime",
 														"type": "DateTime",
-														"physicalType": "date"
+														"physicalType": "timestamp with time zone"
 													}
 												}
 											],
@@ -854,6 +858,12 @@
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
+				"parameters": {
+					"dc_test_session_id": {
+						"type": "string",
+						"defaultValue": "a_random_id"
+					}
+				},
 				"variables": {
 					"mwapioutput": {
 						"type": "String"
@@ -892,12 +902,14 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/mwapi_scheduled_trigger')]",
+			"name": "[concat(parameters('factoryName'), '/mwapi_scheduled_trigger_15_minutes')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "15 minute interval, 10 minutes past the 15 minute mark.  ",
-				"annotations": [],
+				"description": "test 15 minute interval, 10 minutes past the 15 minute mark to allow Zentra to catchup.   ",
+				"annotations": [
+					"test_session"
+				],
 				"runtimeState": "Started",
 				"pipelines": [
 					{
@@ -905,7 +917,9 @@
 							"referenceName": "runMwapiFunction",
 							"type": "PipelineReference"
 						},
-						"parameters": {}
+						"parameters": {
+							"dc_test_session_id": "[parameters('mwapi_scheduled_trigger_15_minutes_properties_runMwapiFunction_parameters_dc_test_session_id')]"
+						}
 					}
 				],
 				"type": "ScheduleTrigger",
@@ -913,8 +927,8 @@
 					"recurrence": {
 						"frequency": "Minute",
 						"interval": 15,
-						"startTime": "2022-06-29T18:25:00Z",
-						"endTime": "2022-07-01T23:55:00Z",
+						"startTime": "2022-07-02T13:10:00Z",
+						"endTime": "2022-07-07T00:55:00Z",
 						"timeZone": "UTC"
 					}
 				}
