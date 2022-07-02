@@ -1,17 +1,19 @@
 {
-	"name": "mwapi_scheduled_trigger",
+	"name": "mwapi_scheduled_trigger_14_minutes",
 	"properties": {
-		"description": "15 minute interval, 10 minutes past the 15 minute mark.  ",
-		"annotations": [],
+		"description": "test 14 minute interval, 10 minutes past the 15 minute mark to allow Zentra to catchup.   ",
+		"annotations": [
+			"test_session_14_mins"
+		],
 		"runtimeState": "Started",
 		"pipelines": [],
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
 				"frequency": "Minute",
-				"interval": 15,
+				"interval": 14,
 				"startTime": "2022-06-29T18:25:00Z",
-				"endTime": "2022-07-01T23:55:00Z",
+				"endTime": "2022-07-08T00:55:00Z",
 				"timeZone": "UTC"
 			}
 		}
