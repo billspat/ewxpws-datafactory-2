@@ -1,0 +1,422 @@
+{
+	"name": "get_weather_readings",
+	"properties": {
+		"description": "calls az function as a REST data source and inserts into database.   Version 2 of runMwapiFunction",
+		"activities": [
+			{
+				"name": "get_station_list",
+				"type": "Lookup",
+				"dependsOn": [
+					{
+						"activity": "set_timestamp_var",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "AzurePostgreSqlSource",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "stations",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "mwapi_each_station",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "get_station_list",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('get_station_list').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "get_reading_to_blob",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "Destination",
+									"value": "ewx-data/@{item().station_id}/@{concat('reading','_',item().station_id,'_',variables('timestamp_var'),'.csv')}"
+								}
+							],
+							"typeProperties": {
+								"source": {
+									"type": "RestSource",
+									"httpRequestTimeout": "00:01:40",
+									"requestInterval": "00.00:00:00.010",
+									"requestMethod": "POST",
+									"requestBody": {
+										"value": "@concat('{\"station_type\":\"',\n  item().station_type, \n  '\",\"station_config\":',\n  item().station_config,\n  '}'\n)",
+										"type": "Expression"
+									},
+									"paginationRules": {
+										"supportRFC5988": "true"
+									}
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings",
+										"copyBehavior": "FlattenHierarchy"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"path": "$['station_id']"
+											},
+											"sink": {
+												"name": "station_id",
+												"type": "String"
+											}
+										},
+										{
+											"source": {
+												"path": "$['request_datetime']"
+											},
+											"sink": {
+												"name": "request_datetime",
+												"type": "DateTime"
+											}
+										},
+										{
+											"source": {
+												"path": "$['pcpn']"
+											},
+											"sink": {
+												"name": "pcpn",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"path": "$['data_datetime']"
+											},
+											"sink": {
+												"name": "data_datetime",
+												"type": "DateTime"
+											}
+										},
+										{
+											"source": {
+												"path": "$['atemp']"
+											},
+											"sink": {
+												"name": "atemp",
+												"type": "Double"
+											}
+										},
+										{
+											"source": {
+												"path": "$['relh']"
+											},
+											"sink": {
+												"name": "relh",
+												"type": "Double"
+											}
+										}
+									]
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "mwapi_rest_dataset",
+									"type": "DatasetReference",
+									"parameters": {
+										"station_type": "@item().station_type",
+										"station_config": {
+											"value": "@item().station_config",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "reading_output_csv",
+									"type": "DatasetReference",
+									"parameters": {
+										"FileName": "reading",
+										"TimeStamp": {
+											"value": "@variables('timestamp_var')",
+											"type": "Expression"
+										},
+										"StationID": {
+											"value": "@item().station_id",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "import_reading_csv_to_db",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "get_reading_to_blob",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "DelimitedTextSource",
+									"additionalColumns": [
+										{
+											"name": "station_type",
+											"value": {
+												"value": "@item().station_type",
+												"type": "Expression"
+											}
+										}
+									],
+									"storeSettings": {
+										"type": "AzureBlobStorageReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "DelimitedTextReadSettings"
+									}
+								},
+								"sink": {
+									"type": "AzurePostgreSQLSink",
+									"writeBatchSize": 1000000,
+									"writeBatchTimeout": "00:30:00",
+									"writeMethod": "CopyCommand"
+								},
+								"enableStaging": false,
+								"logSettings": {
+									"enableCopyActivityLog": true,
+									"copyActivityLogSettings": {
+										"logLevel": "Info",
+										"enableReliableLogging": false
+									},
+									"logLocationSettings": {
+										"linkedServiceName": {
+											"referenceName": "AzureBlobStorageEwxDev",
+											"type": "LinkedServiceReference"
+										},
+										"path": "ewx-data"
+									}
+								},
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "station_id",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "station_id",
+												"type": "String",
+												"physicalType": "text"
+											}
+										},
+										{
+											"source": {
+												"name": "station_type",
+												"type": "String"
+											},
+											"sink": {
+												"name": "station_type",
+												"type": "String",
+												"physicalType": "text"
+											}
+										},
+										{
+											"source": {
+												"name": "atemp",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "atemp",
+												"type": "Double",
+												"physicalType": "double precision"
+											}
+										},
+										{
+											"source": {
+												"name": "pcpn",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "pcpn",
+												"type": "Double",
+												"physicalType": "double precision"
+											}
+										},
+										{
+											"source": {
+												"name": "relh",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "relh",
+												"type": "Double",
+												"physicalType": "double precision"
+											}
+										},
+										{
+											"source": {
+												"name": "request_datetime",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "request_datetime",
+												"type": "DateTime",
+												"physicalType": "timestamp with time zone"
+											}
+										},
+										{
+											"source": {
+												"name": "data_datetime",
+												"type": "String",
+												"physicalType": "String"
+											},
+											"sink": {
+												"name": "data_datetime",
+												"type": "DateTime",
+												"physicalType": "timestamp with time zone"
+											}
+										}
+									],
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "reading_output_csv",
+									"type": "DatasetReference",
+									"parameters": {
+										"FileName": "reading",
+										"TimeStamp": {
+											"value": "@variables('timestamp_var')",
+											"type": "Expression"
+										},
+										"StationID": {
+											"value": "@item().station_id",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "observations_table",
+									"type": "DatasetReference"
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "set_timestamp_var",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "timestamp_var",
+					"value": {
+						"value": "@utcNow()",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"concurrency": 5,
+		"parameters": {
+			"dc_test_session_id": {
+				"type": "string",
+				"defaultValue": "a_random_id"
+			}
+		},
+		"variables": {
+			"mwapioutput": {
+				"type": "String"
+			},
+			"stations_station_type": {
+				"type": "String"
+			},
+			"stations_station_config": {
+				"type": "String"
+			},
+			"mwapi_rest_body": {
+				"type": "String"
+			},
+			"readings": {
+				"type": "String"
+			},
+			"some_data": {
+				"type": "Array"
+			},
+			"reading_filename": {
+				"type": "String"
+			},
+			"timestamp_var": {
+				"type": "String",
+				"defaultValue": "@utcNow()"
+			}
+		},
+		"annotations": []
+	}
+}
