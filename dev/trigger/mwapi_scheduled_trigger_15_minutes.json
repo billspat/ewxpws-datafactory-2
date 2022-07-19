@@ -1,7 +1,7 @@
 {
 	"name": "mwapi_scheduled_trigger_15_minutes",
 	"properties": {
-		"description": "test 15 minute interval, 10 minutes past the 15 minute mark to allow Zentra to catchup.   ",
+		"description": "test 15 minute interval, 10 minutes past the 15 minute mark to allow Zentra to catchup.     ",
 		"annotations": [
 			"test_session"
 		],
@@ -22,8 +22,8 @@
 			"recurrence": {
 				"frequency": "Minute",
 				"interval": 15,
-				"startTime": "2022-07-14T00:10:00Z",
-				"endTime": "2022-07-16T00:00:00Z",
+				"startTime": "2022-07-19T00:10:00Z",
+				"endTime": "2022-07-21T00:10:00Z",
 				"timeZone": "UTC"
 			}
 		}
