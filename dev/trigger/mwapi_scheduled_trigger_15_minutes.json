@@ -6,17 +6,7 @@
 			"test_session"
 		],
 		"runtimeState": "Started",
-		"pipelines": [
-			{
-				"pipelineReference": {
-					"referenceName": "runMwapiFunction",
-					"type": "PipelineReference"
-				},
-				"parameters": {
-					"dc_test_session_id": "2022July02-15minute-test"
-				}
-			}
-		],
+		"pipelines": [],
 		"type": "ScheduleTrigger",
 		"typeProperties": {
 			"recurrence": {
